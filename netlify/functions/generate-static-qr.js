@@ -14,9 +14,11 @@ exports.handler = async (event) => {
         };
     }
 
-    const VA_NUMBER = process.env.IPAYMU_VA;
+    const VA_NUMBER = process.env.IPAYMU_VA; // 0000000811159429
     const API_KEY = process.env.IPAYMU_APIKEY;
-    const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://sandbox.ipaymu.com';
+    
+    // ✅ COBA PRODUCTION URL
+    const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://my.ipaymu.com';
     const POS_BASE_URL = process.env.POS_BASE_URL;
 
     if (!VA_NUMBER || !API_KEY) {
@@ -30,55 +32,38 @@ exports.handler = async (event) => {
         };
     }
 
-    const callbackUrl = `${POS_BASE_URL}/.netlify/functions/ipaymu-callback`;
-    
     console.log('🔧 Generating Static QR Code...');
     console.log('VA:', VA_NUMBER);
-    console.log('API Key length:', API_KEY.length);
+    console.log('API Key exists:', !!API_KEY);
     console.log('Base URL:', IPAYMU_BASE_URL);
 
     try {
-        // Prepare request body
-        const requestBody = {
-            name: 'POS Store Static QR',
-            phone: '08123456789',
-            email: 'pos@store.com',
-            amount: '1',
-            notifyUrl: callbackUrl,
-            referenceId: 'pos_static_qr_' + Date.now(),
-            paymentMethod: 'qris',
-            paymentChannel: 'mpm',
-            comments: 'QRIS Static for POS System'
-        };
-
-        // Convert to form data
+        // ✅ COBA FORMAT FORM DATA (bukan JSON)
         const formData = new URLSearchParams();
-        Object.keys(requestBody).forEach(key => {
-            formData.append(key, requestBody[key]);
-        });
+        formData.append('name', 'POS Store Static QR');
+        formData.append('phone', '08123456789');
+        formData.append('email', 'pos@store.com');
+        formData.append('amount', '1');
+        formData.append('notifyUrl', `${POS_BASE_URL}/.netlify/functions/ipaymu-callback`);
+        formData.append('referenceId', 'pos_static_qr_' + Date.now());
+        formData.append('paymentMethod', 'qris');
+        formData.append('paymentChannel', 'mpm');
 
         const bodyString = formData.toString();
         console.log('Request Body:', bodyString);
 
-        // ✅ FIXED: Generate signature sesuai dokumentasi iPaymu
-        const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14);
-        console.log('Timestamp:', timestamp);
-
-        // Hash the request body
-        const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex');
-        console.log('Body Hash:', bodyHash);
-
-        // Create string to sign
-        const stringToSign = `POST:${VA_NUMBER}:${bodyHash.toLowerCase()}:${API_KEY}`;
-        console.log('String to Sign:', stringToSign);
-
         // Generate signature
+        const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14);
+        const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex').toLowerCase();
+        const stringToSign = `POST:${VA_NUMBER}:${bodyHash}:${API_KEY}`;
         const signature = crypto.createHmac('sha256', API_KEY).update(stringToSign).digest('hex');
-        console.log('Generated Signature:', signature);
 
-        console.log('Sending request to iPaymu...');
-        
-        const apiUrl = `${IPAYMU_BASE_URL}/api/v2/payment/direct`;
+        console.log('Timestamp:', timestamp);
+        console.log('Body Hash:', bodyHash);
+        console.log('Signature:', signature);
+
+        // ✅ COBA REGULAR PAYMENT ENDPOINT
+        const apiUrl = `${IPAYMU_BASE_URL}/api/v2/payment`;
         console.log('API URL:', apiUrl);
         
         const response = await fetch(apiUrl, {
@@ -92,7 +77,6 @@ exports.handler = async (event) => {
             body: bodyString
         });
 
-        // Handle response
         const responseText = await response.text();
         console.log('Response status:', response.status);
         console.log('Response:', responseText);
@@ -101,12 +85,8 @@ exports.handler = async (event) => {
         try {
             data = JSON.parse(responseText);
         } catch (parseError) {
-            console.error('❌ JSON parse error:', parseError);
-            throw new Error(`iPaymu returned non-JSON: ${responseText.substring(0, 200)}`);
+            throw new Error(`iPaymu returned: ${responseText.substring(0, 200)}`);
         }
-
-        console.log('iPaymu API Response Status:', data.Status);
-        console.log('iPaymu API Response Message:', data.Message);
 
         if (data.Status !== 200) {
             throw new Error(data.Message || `iPaymu API Error: Status ${data.Status}`);
@@ -116,8 +96,6 @@ exports.handler = async (event) => {
             throw new Error('No QR string received from iPaymu');
         }
 
-        const qrString = data.Data.QrString;
-        
         console.log('✅ QR Code generated successfully!');
         
         return {
@@ -128,22 +106,20 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify({
                 success: true,
-                qr_string: qrString,
-                qr_url: data.Data.QrUrl,
-                reference_id: data.Data.ReferenceId,
+                qr_string: data.Data.QrString,
                 note: 'COPY THIS QR STRING TO IPAYMU_STATIC_QR_STRING ENVIRONMENT VARIABLE'
             })
         };
 
     } catch (error) {
-        console.error('❌ Error generating QR:', error);
+        console.error('❌ Error:', error);
         return {
             statusCode: 500,
             headers: { 'Access-Control-Allow-Origin': '*' },
             body: JSON.stringify({
                 success: false,
                 error: error.message,
-                solution: 'Check IPAYMU_VA and IPAYMU_APIKEY values'
+                help: 'VA 0000000811159429 looks like production VA. Use production URL and API Key.'
             })
         };
     }
