@@ -14,13 +14,11 @@ exports.handler = async (event) => {
         };
     }
 
-    // ✅ BENAR: IPAYMU_APIKEY (tanpa underscore)
     const VA_NUMBER = process.env.IPAYMU_VA;
-    const API_KEY = process.env.IPAYMU_APIKEY; // ← PERBAIKAN DI SINI!
-    const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://my.ipaymu.com';
+    const API_KEY = process.env.IPAYMU_APIKEY;
+    const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://sandbox.ipaymu.com';
     const POS_BASE_URL = process.env.POS_BASE_URL;
 
-    // ✅ Update error message juga
     if (!VA_NUMBER || !API_KEY) {
         return {
             statusCode: 500,
@@ -35,7 +33,10 @@ exports.handler = async (event) => {
     const callbackUrl = `${POS_BASE_URL}/.netlify/functions/ipaymu-callback`;
     
     console.log('🔧 Generating Static QR Code...');
-    console.log('API Key exists:', !!API_KEY); // Debug
+    console.log('VA:', VA_NUMBER);
+    console.log('API Key exists:', !!API_KEY);
+    console.log('Base URL:', IPAYMU_BASE_URL);
+    console.log('Callback URL:', callbackUrl);
 
     try {
         const formData = new URLSearchParams();
@@ -56,7 +57,13 @@ exports.handler = async (event) => {
         const stringToSign = `POST:${VA_NUMBER}:${bodyHash}:${API_KEY}`;
         const signature = crypto.createHmac('sha256', API_KEY).update(stringToSign).digest('hex');
 
-        const response = await fetch(`${IPAYMU_BASE_URL}/api/v2/payment`, {
+        console.log('Sending request to iPaymu...');
+        
+        // ✅ BENAR: Base URL + endpoint
+        const apiUrl = `${IPAYMU_BASE_URL}/api/v2/payment/direct`;
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -67,11 +74,31 @@ exports.handler = async (event) => {
             body: bodyString
         });
 
-        const data = await response.json();
+        // Handle response
+        const responseText = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response first 500 chars:', responseText.substring(0, 500));
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('❌ iPaymu returned HTML instead of JSON');
+            
+            if (responseText.includes('Invalid') || responseText.includes('Error')) {
+                throw new Error('iPaymu API returned error. Check credentials.');
+            } else if (responseText.includes('Not Found')) {
+                throw new Error('iPaymu API endpoint not found.');
+            } else {
+                throw new Error(`iPaymu returned HTML: ${responseText.substring(0, 200)}...`);
+            }
+        }
+
         console.log('iPaymu API Response Status:', data.Status);
+        console.log('iPaymu API Response Message:', data.Message);
 
         if (data.Status !== 200) {
-            throw new Error(data.Message || `API Error: ${data.Status}`);
+            throw new Error(data.Message || `iPaymu API Error: Status ${data.Status}`);
         }
 
         if (!data.Data || !data.Data.QrString) {
@@ -79,6 +106,9 @@ exports.handler = async (event) => {
         }
 
         const qrString = data.Data.QrString;
+        
+        console.log('✅ QR Code generated successfully!');
+        console.log('QR String (first 50 chars):', qrString.substring(0, 50));
         
         return {
             statusCode: 200,
