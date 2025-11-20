@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     }
 
     const VA_NUMBER = process.env.IPAYMU_VA;
-    const API_KEY = process.env.IPAYMU_API_KEY;
+    const API_KEY = process.env.IPAYMU_APIKEY;
     const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://my.ipaymu.com';
     const POS_BASE_URL = process.env.POS_BASE_URL;
 
