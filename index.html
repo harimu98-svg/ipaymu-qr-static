@@ -4,197 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QRIS Static Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 40px;
-        }
-        
-        .info-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .info-card h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .feature-list {
-            list-style: none;
-        }
-        
-        .feature-list li {
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .feature-list li::before {
-            content: "✅";
-            margin-right: 10px;
-        }
-        
-        .btn-generate {
-            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            font-size: 1.2em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: block;
-            margin: 0 auto 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        
-        .btn-generate:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-        }
-        
-        .btn-generate:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .qr-result {
-            text-align: center;
-            padding: 30px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
-        }
-        
-        .qr-image {
-            max-width: 300px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            background: white;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        
-        .qr-details {
-            margin-top: 20px;
-            text-align: left;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        
-        .detail-item {
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .info-card { background: #f8f9fa; border-radius: 10px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #3498db; }
+        .feature-list { list-style: none; }
+        .feature-list li { padding: 8px 0; display: flex; align-items: center; }
+        .feature-list li::before { content: "✅"; margin-right: 10px; }
+        .btn-generate { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); color: white; border: none; padding: 18px 40px; font-size: 1.2em; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; display: block; margin: 0 auto 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-generate:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        .btn-generate:disabled { background: #95a5a6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .qr-result { text-align: center; padding: 30px; background: #f8f9fa; border-radius: 10px; margin-top: 20px; display: none; }
+        .qr-container { display: inline-block; padding: 20px; background: white; border-radius: 10px; border: 2px solid #ddd; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #qrcode { margin: 0 auto; }
+        .qr-details { margin-top: 20px; text-align: left; background: white; padding: 20px; border-radius: 10px; }
+        .detail-item { margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .status-indicator { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-left: 10px; }
         .status-pending { background: #fff3cd; color: #856404; }
         .status-success { background: #d4edda; color: #155724; }
         .status-expired { background: #f8d7da; color: #721c24; }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 2s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background: #545b62;
-        }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn-secondary { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.3s ease; }
+        .btn-secondary:hover { background: #545b62; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🏷️ QRIS Static Generator</h1>
-            <p>Generate QR Code yang bisa dipakai berkali-kali dengan minimal Rp 1.000</p>
+            <p>Generate QR Code reusable dengan minimal Rp 1.000</p>
         </div>
         
         <div class="content">
@@ -220,7 +66,10 @@
             
             <div class="qr-result" id="qrResult">
                 <h2>✅ QRIS Static Siap Pakai!</h2>
-                <img id="qrImage" class="qr-image" src="" alt="QR Code">
+                
+                <div class="qr-container">
+                    <div id="qrcode"></div>
+                </div>
                 
                 <div class="qr-details">
                     <div class="detail-item">
@@ -249,8 +98,8 @@
                     <button class="btn-secondary" onclick="checkPaymentStatus()">
                         🔄 Check Status
                     </button>
-                    <button class="btn-secondary" onclick="saveQRImage()">
-                        💾 Save QR
+                    <button class="btn-secondary" onclick="downloadQR()">
+                        💾 Download QR
                     </button>
                     <button class="btn-secondary" onclick="printQR()">
                         🖨️ Print QR
@@ -262,6 +111,7 @@
 
     <script>
         let currentSessionId = null;
+        let currentQRString = null;
         
         async function generateStaticQR() {
             const btn = document.getElementById('generateBtn');
@@ -274,25 +124,21 @@
                 loading.style.display = 'block';
                 qrResult.style.display = 'none';
                 
-                console.log('🔄 Starting QRIS Static generation...');
-                
                 const response = await fetch('/.netlify/functions/generate-static-qr', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 });
 
                 const result = await response.json();
-                console.log('📥 Response from iPaymu:', result);
                 
-                if (result.Status === 200 && result.Data.QrImage) {
+                if (result.Status === 200 && result.Data.QrString) {
                     currentSessionId = result.Data.SessionId;
+                    currentQRString = result.Data.QrString;
                     
-                    // Display QR Image
-                    document.getElementById('qrImage').src = result.Data.QrImage;
+                    // Generate QR Code from string
+                    generateQRCode(currentQRString);
+                    
                     document.getElementById('refId').textContent = result.Data.ReferenceId;
                     document.getElementById('sessionId').textContent = result.Data.SessionId;
                     document.getElementById('expiredDate').textContent = result.Data.Expired;
@@ -300,14 +146,7 @@
                     qrResult.style.display = 'block';
                     loading.style.display = 'none';
                     
-                    console.log('✅ QRIS Static generated successfully:', {
-                        sessionId: result.Data.SessionId,
-                        qrUrl: result.Data.QrImage,
-                        amount: result.Data.SubTotal,
-                        expired: result.Data.Expired
-                    });
-                    
-                    // Start polling for status
+                    // Start status polling
                     startStatusPolling();
                     
                 } else {
@@ -315,7 +154,7 @@
                 }
 
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('Error:', error);
                 alert('Error: ' + error.message);
                 loading.style.display = 'none';
             } finally {
@@ -324,31 +163,42 @@
             }
         }
         
+        function generateQRCode(qrString) {
+            // Clear previous QR
+            document.getElementById('qrcode').innerHTML = '';
+            
+            // Generate new QR
+            new QRCode(document.getElementById('qrcode'), {
+                text: qrString,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
         async function checkPaymentStatus() {
             if (!currentSessionId) {
-                alert('No active QR session');
+                alert('Tidak ada session aktif');
                 return;
             }
             
             try {
-                const response = await fetch('/.netlify/functions/get-static-qr', {
+                const response = await fetch('/.netlify/functions/check-payment-status', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId: currentSessionId })
                 });
                 
                 const result = await response.json();
-                console.log('📊 Status check result:', result);
                 
                 if (result.Data) {
                     updatePaymentStatus(result.Data);
                 }
                 
             } catch (error) {
-                console.error('❌ Status check error:', error);
+                console.error('Status check error:', error);
                 alert('Error checking status: ' + error.message);
             }
         }
@@ -377,46 +227,19 @@
             }, 10000);
         }
         
-        function saveQRImage() {
-            const qrImage = document.getElementById('qrImage');
-            const link = document.createElement('a');
-            link.download = `qris-static-${currentSessionId}.png`;
-            link.href = qrImage.src;
-            link.click();
+        function downloadQR() {
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            if (qrCanvas) {
+                const link = document.createElement('a');
+                link.download = `qris-static-${currentSessionId}.png`;
+                link.href = qrCanvas.toDataURL();
+                link.click();
+            }
         }
         
         function printQR() {
-            const qrResult = document.getElementById('qrResult').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                    <head>
-                        <title>Print QRIS Static</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-                            img { max-width: 400px; border: 2px solid #000; padding: 10px; }
-                            .details { text-align: left; margin: 20px auto; max-width: 400px; }
-                        </style>
-                    </head>
-                    <body>
-                        <h2>QRIS Static</h2>
-                        ${qrResult}
-                    </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
+            window.print();
         }
-        
-        // Auto-check status when page loads if there's a session
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionId = urlParams.get('session');
-            if (sessionId) {
-                currentSessionId = sessionId;
-                checkPaymentStatus();
-            }
-        });
     </script>
 </body>
 </html>
