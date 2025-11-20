@@ -1,14 +1,11 @@
-// netlify/functions/create-static-qr.js
 const crypto = require("crypto");
 
 exports.handler = async function(event, context) {
-  // ✅ Environment variables
   const VA = process.env.IPAYMU_VA;
   const APIKEY = process.env.IPAYMU_APIKEY;
   const IPAYMU_URL = process.env.IPAYMU_BASE_URL;
   const APP_URL = process.env.POS_BASE_URL;
 
-  // Validasi environment
   if (!VA || !APIKEY || !IPAYMU_URL) {
     return {
       statusCode: 500,
@@ -19,26 +16,24 @@ exports.handler = async function(event, context) {
   try {
     const referenceId = "STATIC-" + Date.now();
     const RETURN_URL = `${APP_URL}/success.html`;
-    const NOTIFY_URL = `${APP_URL}/.netlify/functions/callback`;
+    const NOTIFY_URL = `${APP_URL}/.netlify/functions/ipaymu-callback`;
 
-    // ✅ BODY untuk QRIS STATIC - Amount 0 (customer input)
     const body = {
-      name: "Merchant Store",           // Nama merchant
+      name: "Merchant Store",
       phone: "081234567890", 
       email: "merchant@store.com",
-      amount: 1000,                        // ✅ AMOUNT 0 = Customer input
+      amount: 1000,
       notifyUrl: NOTIFY_URL,
       returnUrl: RETURN_URL,
       referenceId: referenceId,
-      paymentMethod: "qris",            // ✅ QRIS method
-      expired: 8760,                    // ✅ 1 TAHUN (8760 jam)
-      expiredType: "hours",             // ✅ Expired dalam jam
-      comments: "QRIS Static - Customer Input Amount"
+      paymentMethod: "qris",
+      expired: 8760,
+      expiredType: "hours",
+      comments: "QRIS Static - Minimal Rp 1.000"
     };
 
     const jsonBody = JSON.stringify(body);
     
-    // ✅ Signature calculation (sama seperti dynamic)
     const now = new Date();
     const timestamp = 
       now.getFullYear().toString() +
@@ -59,13 +54,8 @@ exports.handler = async function(event, context) {
       "timestamp": timestamp
     };
 
-    console.log("🚀 Creating QRIS Static:", { 
-      referenceId, 
-      amount: 1000,           // ✅ Log amount 0
-      expired: "8760 hours (1 year)" 
-    });
+    console.log("🚀 Creating QRIS Static:", { referenceId, amount: 1000 });
 
-    // ✅ Kirim request ke iPaymu
     const response = await fetch(IPAYMU_URL, {
       method: "POST",
       headers: headers,
@@ -76,8 +66,7 @@ exports.handler = async function(event, context) {
     
     console.log("✅ QRIS Static Response:", {
       status: responseData.Status,
-      sessionId: responseData.Data?.SessionId,
-      qrUrl: responseData.Data?.QrUrl
+      sessionId: responseData.Data?.SessionId
     });
 
     return {
