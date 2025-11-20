@@ -3,252 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS - QRIS Static iPaymu</title>
-     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <title>QRIS Static Generator</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 20px; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container { 
-            max-width: 500px; margin: 0 auto; background: white; 
-            border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
             text-align: center;
         }
-        h1 { color: #333; margin-bottom: 10px; }
-        .subtitle { color: #666; margin-bottom: 20px; }
-        .store-info {
-            background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left;
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
         }
-        .qr-container { 
-            margin: 20px 0; padding: 20px; border: 2px dashed #ddd; border-radius: 10px; background: white;
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
         }
-        .instructions {
-            background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left;
+        
+        .content {
+            padding: 40px;
         }
-        .status-container { 
-            margin: 20px 0; padding: 15px; border-radius: 8px; text-align: center; display: none;
+        
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #3498db;
         }
-        .status-pending { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
-        .status-success { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
-        .status-failed { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .payment-details {
-            background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: left; display: none;
+        
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
         }
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;
-            padding: 12px 20px; border-radius: 8px; cursor: pointer; margin: 5px; font-size: 14px;
+        
+        .feature-list {
+            list-style: none;
         }
-        .success { background: #28a745; }
-        .failed { background: #dc3545; }
+        
+        .feature-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list li::before {
+            content: "✅";
+            margin-right: 10px;
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .btn-generate:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .qr-result {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .qr-image {
+            max-width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .qr-details {
+            margin-top: 20px;
+            text-align: left;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .detail-item {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-expired { background: #f8d7da; color: #721c24; }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏪 POS STORE</h1>
-        <p class="subtitle">QRIS Static - iPaymu</p>
-        
-        <div class="store-info">
-            <h3>📋 Informasi Toko</h3>
-            <p><strong>Metode:</strong> QRIS Static</p>
-            <p><strong>Status:</strong> <span id="storeStatus">🟢 Online</span></p>
+        <div class="header">
+            <h1>🏷️ QRIS Static Generator</h1>
+            <p>Generate QR Code yang bisa dipakai berkali-kali dengan minimal Rp 1.000</p>
         </div>
         
-        <div class="instructions">
-            <h3>📱 Cara Bayar:</h3>
-            <ol>
-                <li>Scan QR code dengan e-wallet</li>
-                <li>Input amount yang ingin dibayar</li>
-                <li>Konfirmasi pembayaran</li>
-                <li>Tunggu notifikasi suara</li>
-            </ol>
-        </div>
-        
-        <div class="qr-container">
-            <canvas id="qrcode"></canvas>
-            <p><small>Terakhir update: <span id="lastUpdated"></span></small></p>
-        </div>
-
-        <div class="payment-details" id="paymentDetails">
-            <h4>📄 Transaksi Terakhir</h4>
-            <p><strong>Status:</strong> <span id="detailStatus">-</span></p>
-            <p><strong>Amount:</strong> <span id="detailAmount">-</span></p>
-            <p><strong>Waktu:</strong> <span id="detailTime">-</span></p>
-        </div>
-        
-        <div id="statusContainer" class="status-container">
-            <h3 id="statusTitle">Status Pembayaran</h3>
-            <p id="statusMessage">Scan QR code untuk memulai</p>
-        </div>
-
-        <div>
-            <button onclick="testSuccess()" class="success">Test Suara Sukses</button>
-            <button onclick="testFailed()" class="failed">Test Suara Gagal</button>
-            <button onclick="reloadQR()">🔄 Reload QR</button>
+        <div class="content">
+            <div class="info-card">
+                <h3>🎯 Fitur QRIS Static</h3>
+                <ul class="feature-list">
+                    <li>Minimal payment: <strong>Rp 1.000</strong></li>
+                    <li>Bisa dipakai berkali-kali oleh customer berbeda</li>
+                    <li>Expired: <strong>1 TAHUN</strong></li>
+                    <li>Customer bisa bayar lebih dari minimal amount</li>
+                    <li>Cocok untuk toko fisik, kasir, atau merchant offline</li>
+                </ul>
+            </div>
+            
+            <button class="btn-generate" onclick="generateStaticQR()" id="generateBtn">
+                🚀 Generate QRIS Static Baru
+            </button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Sedang generate QR Code...</p>
+            </div>
+            
+            <div class="qr-result" id="qrResult">
+                <h2>✅ QRIS Static Siap Pakai!</h2>
+                <img id="qrImage" class="qr-image" src="" alt="QR Code">
+                
+                <div class="qr-details">
+                    <div class="detail-item">
+                        <strong>Session ID:</strong> 
+                        <span id="sessionId"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Reference ID:</strong> 
+                        <span id="refId"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Minimal Amount:</strong> 
+                        <span>Rp 1.000</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Expired:</strong> 
+                        <span id="expiredDate"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Status:</strong> 
+                        <span id="paymentStatus" class="status-indicator status-pending">MENUNGGU</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="checkPaymentStatus()">
+                        🔄 Check Status
+                    </button>
+                    <button class="btn-secondary" onclick="saveQRImage()">
+                        💾 Save QR
+                    </button>
+                    <button class="btn-secondary" onclick="printQR()">
+                        🖨️ Print QR
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <audio id="successSound" preload="auto"></audio>
-    <audio id="failedSound" preload="auto"></audio>
-
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
-        let soundEnabled = true;
-        let checkInterval = null;
-
-        // Initialize
-        window.addEventListener('load', function() {
-            loadStaticQR();
-            startPaymentChecking();
-            showStatus('pending', 'Scan QR code untuk pembayaran');
-        });
-
-        // QR Code
-        async function loadStaticQR() {
+        let currentSessionId = null;
+        
+        async function generateStaticQR() {
+            const btn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const qrResult = document.getElementById('qrResult');
+            
             try {
-                const response = await fetch('/.netlify/functions/get-static-qr');
-                const qrString = await response.text();
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Generating...';
+                loading.style.display = 'block';
+                qrResult.style.display = 'none';
                 
-                await QRCode.toCanvas(document.getElementById('qrcode'), qrString, {
-                    width: 250, margin: 2
+                console.log('🔄 Starting QRIS Static generation...');
+                
+                const response = await fetch('/.netlify/functions/generate-static-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+                console.log('📥 Response from iPaymu:', result);
+                
+                if (result.Status === 200 && result.Data.QrImage) {
+                    currentSessionId = result.Data.SessionId;
+                    
+                    // Display QR Image
+                    document.getElementById('qrImage').src = result.Data.QrImage;
+                    document.getElementById('refId').textContent = result.Data.ReferenceId;
+                    document.getElementById('sessionId').textContent = result.Data.SessionId;
+                    document.getElementById('expiredDate').textContent = result.Data.Expired;
+                    
+                    qrResult.style.display = 'block';
+                    loading.style.display = 'none';
+                    
+                    console.log('✅ QRIS Static generated successfully:', {
+                        sessionId: result.Data.SessionId,
+                        qrUrl: result.Data.QrImage,
+                        amount: result.Data.SubTotal,
+                        expired: result.Data.Expired
+                    });
+                    
+                    // Start polling for status
+                    startStatusPolling();
+                    
+                } else {
+                    throw new Error(result.Message || 'Failed to generate QR');
+                }
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+                loading.style.display = 'none';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Generate QRIS Static Baru';
+            }
+        }
+        
+        async function checkPaymentStatus() {
+            if (!currentSessionId) {
+                alert('No active QR session');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/.netlify/functions/get-static-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ sessionId: currentSessionId })
                 });
                 
-                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
-            } catch (error) {
-                console.error('Error loading QR:', error);
-                showStatus('failed', 'Gagal memuat QR code');
-            }
-        }
-
-        function reloadQR() {
-            loadStaticQR();
-            showStatus('pending', 'QR code diperbarui');
-        }
-
-        // Payment Checking - Polling ke callback function
-        function startPaymentChecking() {
-            checkInterval = setInterval(async () => {
-                try {
-                    const response = await fetch('/.netlify/functions/ipaymu-callback');
-                    const data = await response.json();
-                    
-                    if (data.success && data.data) {
-                        // Cek jika ada payment baru dengan status berhasil/gagal
-                        const payments = Object.values(data.data);
-                        const latestPayment = payments.find(p => 
-                            p.status === 'berhasil' || p.status === 'gagal'
-                        );
-                        
-                        if (latestPayment) {
-                            handlePaymentUpdate(latestPayment);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking payment:', error);
+                const result = await response.json();
+                console.log('📊 Status check result:', result);
+                
+                if (result.Data) {
+                    updatePaymentStatus(result.Data);
                 }
-            }, 3000);
-        }
-
-        function handlePaymentUpdate(payment) {
-            if (payment.status === 'berhasil') {
-                playSuccessSound(payment.amount);
-                showPaymentDetails(payment);
-            } else if (payment.status === 'gagal') {
-                playFailedSound();
-                showPaymentDetails(payment);
+                
+            } catch (error) {
+                console.error('❌ Status check error:', error);
+                alert('Error checking status: ' + error.message);
             }
         }
-
-        // Sound Functions
-        function playSuccessSound(amount) {
-            const audio = document.getElementById('successSound');
-            audio.play().catch(e => console.log('Audio error:', e));
+        
+        function updatePaymentStatus(data) {
+            const statusElement = document.getElementById('paymentStatus');
             
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(
-                    `Pembayaran ${formatAmount(amount)} rupiah berhasil`
-                );
-                utterance.lang = 'id-ID';
-                speechSynthesis.speak(utterance);
+            if (data.Status === 'berhasil' || data.Status_code === 1) {
+                statusElement.textContent = 'SUKSES';
+                statusElement.className = 'status-indicator status-success';
+            } else if (data.Status === 'expired' || data.Status_code === -2) {
+                statusElement.textContent = 'KEDALUWARSA';
+                statusElement.className = 'status-indicator status-expired';
+            } else {
+                statusElement.textContent = 'MENUNGGU';
+                statusElement.className = 'status-indicator status-pending';
             }
-            
-            showStatus('success', `✅ Pembayaran Rp ${formatAmount(amount)} berhasil!`);
         }
-
-        function playFailedSound() {
-            const audio = document.getElementById('failedSound');
-            audio.play().catch(e => console.log('Audio error:', e));
-            
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance('Pembayaran gagal');
-                utterance.lang = 'id-ID';
-                speechSynthesis.speak(utterance);
+        
+        function startStatusPolling() {
+            // Check status every 10 seconds
+            setInterval(() => {
+                if (currentSessionId) {
+                    checkPaymentStatus();
+                }
+            }, 10000);
+        }
+        
+        function saveQRImage() {
+            const qrImage = document.getElementById('qrImage');
+            const link = document.createElement('a');
+            link.download = `qris-static-${currentSessionId}.png`;
+            link.href = qrImage.src;
+            link.click();
+        }
+        
+        function printQR() {
+            const qrResult = document.getElementById('qrResult').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print QRIS Static</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                            img { max-width: 400px; border: 2px solid #000; padding: 10px; }
+                            .details { text-align: left; margin: 20px auto; max-width: 400px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>QRIS Static</h2>
+                        ${qrResult}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Auto-check status when page loads if there's a session
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+            if (sessionId) {
+                currentSessionId = sessionId;
+                checkPaymentStatus();
             }
-            
-            showStatus('failed', '❌ Pembayaran gagal');
-        }
-
-        // UI Functions
-        function showStatus(status, message) {
-            const container = document.getElementById('statusContainer');
-            container.className = 'status-container';
-            container.style.display = 'block';
-            
-            if (status === 'pending') container.classList.add('status-pending');
-            if (status === 'success') container.classList.add('status-success');
-            if (status === 'failed') container.classList.add('status-failed');
-            
-            document.getElementById('statusTitle').textContent = 
-                status === 'pending' ? '⏳ Menunggu' : 
-                status === 'success' ? '✅ Berhasil' : '❌ Gagal';
-            document.getElementById('statusMessage').textContent = message;
-        }
-
-        function showPaymentDetails(payment) {
-            document.getElementById('detailStatus').textContent = 
-                payment.status === 'berhasil' ? '✅ Berhasil' : '❌ Gagal';
-            document.getElementById('detailAmount').textContent = 
-                payment.amount ? `Rp ${formatAmount(payment.amount)}` : '-';
-            document.getElementById('detailTime').textContent = 
-                new Date(payment.updated_at).toLocaleTimeString();
-            
-            document.getElementById('paymentDetails').style.display = 'block';
-        }
-
-        function formatAmount(amount) {
-            return amount ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '0';
-        }
-
-        // Test Functions
-        function testSuccess() {
-            const amount = Math.floor(Math.random() * 50000) + 1000;
-            playSuccessSound(amount);
-            showPaymentDetails({
-                status: 'berhasil',
-                amount: amount,
-                updated_at: new Date().toISOString()
-            });
-        }
-
-        function testFailed() {
-            playFailedSound();
-            showPaymentDetails({
-                status: 'gagal',
-                amount: null,
-                updated_at: new Date().toISOString()
-            });
-        }
-
-        // Preload sound on first click
-        document.addEventListener('click', function initSound() {
-            document.removeEventListener('click', initSound);
-            const audio = document.getElementById('successSound');
-            audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3';
-            const audio2 = document.getElementById('failedSound');
-            audio2.src = 'https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3';
-        }, { once: true });
+        });
     </script>
 </body>
 </html>
