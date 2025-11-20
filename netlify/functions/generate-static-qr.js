@@ -61,7 +61,7 @@ exports.handler = async function(event, context) {
 
     console.log("🚀 Creating QRIS Static:", { 
       referenceId, 
-      amount: 0,           // ✅ Log amount 0
+      amount: 1000,           // ✅ Log amount 0
       expired: "8760 hours (1 year)" 
     });
 
