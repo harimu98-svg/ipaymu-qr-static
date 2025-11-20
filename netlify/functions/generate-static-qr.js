@@ -14,18 +14,20 @@ exports.handler = async (event) => {
         };
     }
 
+    // ✅ BENAR: IPAYMU_APIKEY (tanpa underscore)
     const VA_NUMBER = process.env.IPAYMU_VA;
-    const API_KEY = process.env.IPAYMU_APIKEY;
+    const API_KEY = process.env.IPAYMU_APIKEY; // ← PERBAIKAN DI SINI!
     const IPAYMU_BASE_URL = process.env.IPAYMU_BASE_URL || 'https://my.ipaymu.com';
     const POS_BASE_URL = process.env.POS_BASE_URL;
 
+    // ✅ Update error message juga
     if (!VA_NUMBER || !API_KEY) {
         return {
             statusCode: 500,
             headers: { 'Access-Control-Allow-Origin': '*' },
             body: JSON.stringify({
                 success: false,
-                error: 'IPAYMU_VA or IPAYMU_API_KEY environment variables missing'
+                error: 'IPAYMU_VA or IPAYMU_APIKEY environment variables missing'
             })
         };
     }
@@ -33,14 +35,14 @@ exports.handler = async (event) => {
     const callbackUrl = `${POS_BASE_URL}/.netlify/functions/ipaymu-callback`;
     
     console.log('🔧 Generating Static QR Code...');
-    console.log('Callback URL:', callbackUrl);
+    console.log('API Key exists:', !!API_KEY); // Debug
 
     try {
         const formData = new URLSearchParams();
         formData.append('name', 'POS Store Static QR');
         formData.append('phone', '08123456789');
         formData.append('email', 'pos@store.com');
-        formData.append('amount', '1'); // Minimal amount
+        formData.append('amount', '1');
         formData.append('notifyUrl', callbackUrl);
         formData.append('referenceId', 'pos_static_qr_' + Date.now());
         formData.append('paymentMethod', 'qris');
@@ -66,7 +68,7 @@ exports.handler = async (event) => {
         });
 
         const data = await response.json();
-        console.log('iPaymu API Response:', data);
+        console.log('iPaymu API Response Status:', data.Status);
 
         if (data.Status !== 200) {
             throw new Error(data.Message || `API Error: ${data.Status}`);
