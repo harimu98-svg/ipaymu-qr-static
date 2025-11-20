@@ -34,32 +34,50 @@ exports.handler = async (event) => {
     
     console.log('🔧 Generating Static QR Code...');
     console.log('VA:', VA_NUMBER);
-    console.log('API Key exists:', !!API_KEY);
+    console.log('API Key length:', API_KEY.length);
     console.log('Base URL:', IPAYMU_BASE_URL);
-    console.log('Callback URL:', callbackUrl);
 
     try {
+        // Prepare request body
+        const requestBody = {
+            name: 'POS Store Static QR',
+            phone: '08123456789',
+            email: 'pos@store.com',
+            amount: '1',
+            notifyUrl: callbackUrl,
+            referenceId: 'pos_static_qr_' + Date.now(),
+            paymentMethod: 'qris',
+            paymentChannel: 'mpm',
+            comments: 'QRIS Static for POS System'
+        };
+
+        // Convert to form data
         const formData = new URLSearchParams();
-        formData.append('name', 'POS Store Static QR');
-        formData.append('phone', '08123456789');
-        formData.append('email', 'pos@store.com');
-        formData.append('amount', '1');
-        formData.append('notifyUrl', callbackUrl);
-        formData.append('referenceId', 'pos_static_qr_' + Date.now());
-        formData.append('paymentMethod', 'qris');
-        formData.append('paymentChannel', 'mpm');
-        formData.append('comments', 'QRIS Static for POS System');
+        Object.keys(requestBody).forEach(key => {
+            formData.append(key, requestBody[key]);
+        });
+
+        const bodyString = formData.toString();
+        console.log('Request Body:', bodyString);
+
+        // ✅ FIXED: Generate signature sesuai dokumentasi iPaymu
+        const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14);
+        console.log('Timestamp:', timestamp);
+
+        // Hash the request body
+        const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex');
+        console.log('Body Hash:', bodyHash);
+
+        // Create string to sign
+        const stringToSign = `POST:${VA_NUMBER}:${bodyHash.toLowerCase()}:${API_KEY}`;
+        console.log('String to Sign:', stringToSign);
 
         // Generate signature
-        const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14);
-        const bodyString = formData.toString();
-        const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex').toLowerCase();
-        const stringToSign = `POST:${VA_NUMBER}:${bodyHash}:${API_KEY}`;
         const signature = crypto.createHmac('sha256', API_KEY).update(stringToSign).digest('hex');
+        console.log('Generated Signature:', signature);
 
         console.log('Sending request to iPaymu...');
         
-        // ✅ BENAR: Base URL + endpoint
         const apiUrl = `${IPAYMU_BASE_URL}/api/v2/payment/direct`;
         console.log('API URL:', apiUrl);
         
@@ -77,21 +95,14 @@ exports.handler = async (event) => {
         // Handle response
         const responseText = await response.text();
         console.log('Response status:', response.status);
-        console.log('Response first 500 chars:', responseText.substring(0, 500));
+        console.log('Response:', responseText);
 
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (parseError) {
-            console.error('❌ iPaymu returned HTML instead of JSON');
-            
-            if (responseText.includes('Invalid') || responseText.includes('Error')) {
-                throw new Error('iPaymu API returned error. Check credentials.');
-            } else if (responseText.includes('Not Found')) {
-                throw new Error('iPaymu API endpoint not found.');
-            } else {
-                throw new Error(`iPaymu returned HTML: ${responseText.substring(0, 200)}...`);
-            }
+            console.error('❌ JSON parse error:', parseError);
+            throw new Error(`iPaymu returned non-JSON: ${responseText.substring(0, 200)}`);
         }
 
         console.log('iPaymu API Response Status:', data.Status);
@@ -108,7 +119,6 @@ exports.handler = async (event) => {
         const qrString = data.Data.QrString;
         
         console.log('✅ QR Code generated successfully!');
-        console.log('QR String (first 50 chars):', qrString.substring(0, 50));
         
         return {
             statusCode: 200,
@@ -132,7 +142,8 @@ exports.handler = async (event) => {
             headers: { 'Access-Control-Allow-Origin': '*' },
             body: JSON.stringify({
                 success: false,
-                error: error.message
+                error: error.message,
+                solution: 'Check IPAYMU_VA and IPAYMU_APIKEY values'
             })
         };
     }
