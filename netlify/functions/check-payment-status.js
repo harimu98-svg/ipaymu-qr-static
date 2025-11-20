@@ -45,7 +45,7 @@ exports.handler = async function(event, context) {
       "timestamp": timestamp
     };
 
-    console.log("🔍 Checking QR Status:", { sessionId });
+    console.log("🔍 Checking payment status:", { sessionId });
 
     const response = await fetch(IPAYMU_URL, {
       method: "POST",
@@ -55,7 +55,7 @@ exports.handler = async function(event, context) {
 
     const data = await response.json();
     
-    console.log("📊 QR Status Result:", {
+    console.log("📊 Payment status result:", {
       sessionId: sessionId,
       status: data.Data?.Status,
       amount: data.Data?.Amount
@@ -68,11 +68,11 @@ exports.handler = async function(event, context) {
     };
 
   } catch (err) {
-    console.error("❌ Check QR status error:", err);
+    console.error("❌ Check payment status error:", err);
     return {
       statusCode: 500,
       body: JSON.stringify({ 
-        error: "Failed to check QR status",
+        error: "Failed to check payment status",
         message: err.message 
       })
     };
