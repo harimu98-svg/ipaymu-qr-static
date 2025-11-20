@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
       name: "Merchant Store",           // Nama merchant
       phone: "081234567890", 
       email: "merchant@store.com",
-      amount: 0,                        // ✅ AMOUNT 0 = Customer input
+      amount: 1000,                        // ✅ AMOUNT 0 = Customer input
       notifyUrl: NOTIFY_URL,
       returnUrl: RETURN_URL,
       referenceId: referenceId,
